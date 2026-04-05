@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '../lib/api'
 
 export interface IncomeExpensesData {
-  income: number
-  expenses: number
-  savings: number
-  savings_rate: number
-  avg_per_day: number
+  period_start: string
+  period_end: string
+  total_income: number
+  total_expenses: number
+  net_savings: number
+  savings_rate: number | null
 }
 
 interface UseIncomeExpensesParams {

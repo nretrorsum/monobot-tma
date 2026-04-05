@@ -3,7 +3,11 @@ import { apiFetch } from '../lib/api'
 
 export interface BalanceHistoryPoint {
   date: string
-  balance: number
+  income: number
+  expenses: number
+  net: number
+  closing_balance: number
+  transaction_count: number
 }
 
 interface UseHistoryParams {

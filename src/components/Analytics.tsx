@@ -127,20 +127,24 @@ export function Analytics() {
         <div className="grid grid-cols-2 gap-3">
           <div className="p-4 rounded-2xl bg-card-bg">
             <div className="text-xs mb-1 text-muted">Доходи</div>
-            <div className="text-lg font-bold text-green">{formatMoney(incomeExpenses.income)}</div>
+            <div className="text-lg font-bold text-green">{formatMoney(incomeExpenses.total_income)}</div>
           </div>
           <div className="p-4 rounded-2xl bg-card-bg">
             <div className="text-xs mb-1 text-muted">Витрати</div>
-            <div className="text-lg font-bold text-red">{formatMoney(incomeExpenses.expenses)}</div>
+            <div className="text-lg font-bold text-red">{formatMoney(incomeExpenses.total_expenses)}</div>
           </div>
           <div className="p-4 rounded-2xl bg-card-bg">
             <div className="text-xs mb-1 text-muted">Заощадження</div>
-            <div className="text-lg font-bold text-light-purple">{formatMoney(incomeExpenses.savings)}</div>
-            <div className="text-xs text-muted">{incomeExpenses.savings_rate.toFixed(1)}% від доходу</div>
+            <div className="text-lg font-bold text-light-purple">{formatMoney(incomeExpenses.net_savings)}</div>
+            {incomeExpenses.savings_rate != null && (
+              <div className="text-xs text-muted">{incomeExpenses.savings_rate.toFixed(1)}% від доходу</div>
+            )}
           </div>
           <div className="p-4 rounded-2xl bg-card-bg">
             <div className="text-xs mb-1 text-muted">Середня/день</div>
-            <div className="text-lg font-bold text-purple">{formatMoney(incomeExpenses.avg_per_day)}</div>
+            <div className="text-lg font-bold text-purple">
+              {formatMoney(burnRate?.avg_daily_expenses ?? 0)}
+            </div>
           </div>
         </div>
       ) : (
@@ -150,16 +154,16 @@ export function Analytics() {
       {/* Charts */}
       {incomeExpenses && (
         <IncomeExpensesChart
-          income={incomeExpenses.income}
-          expenses={incomeExpenses.expenses}
-          savings={incomeExpenses.savings}
+          income={incomeExpenses.total_income}
+          expenses={incomeExpenses.total_expenses}
+          savings={incomeExpenses.net_savings}
         />
       )}
 
       {catLoading ? (
         <div className="h-60 rounded-2xl bg-card-bg animate-pulse" />
       ) : categories.length > 0 ? (
-        <CategoryDonut data={categories.map(c => ({ name: c.category, value: c.amount }))} />
+        <CategoryDonut data={categories.map(c => ({ name: c.display_name, value: c.total_amount }))} />
       ) : null}
 
       {histLoading ? (
@@ -170,8 +174,8 @@ export function Analytics() {
 
       {burnLoading ? (
         <div className="h-60 rounded-2xl bg-card-bg animate-pulse" />
-      ) : burnRate.length > 0 ? (
-        <BurnRateChart data={burnRate} />
+      ) : burnRate && burnRate.daily_breakdown.length > 0 ? (
+        <BurnRateChart data={burnRate.daily_breakdown} />
       ) : null}
     </div>
   )

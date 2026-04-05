@@ -1,10 +1,23 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '../lib/api'
 
-export interface BurnRatePoint {
+export interface BurnRateDailyPoint {
   date: string
   expenses: number
-  avg7d: number
+  moving_avg_7d: number
+}
+
+export interface BurnRateData {
+  period_start: string
+  period_end: string
+  total_expenses: number
+  days_in_period: number
+  avg_daily_expenses: number
+  moving_avg_7d: number
+  moving_avg_30d: number
+  prev_period_avg_daily: number
+  trend_percentage: number
+  daily_breakdown: BurnRateDailyPoint[]
 }
 
 interface UseBurnRateParams {
@@ -14,7 +27,7 @@ interface UseBurnRateParams {
 }
 
 export function useBurnRate(params?: UseBurnRateParams) {
-  const [data, setData] = useState<BurnRatePoint[]>([])
+  const [data, setData] = useState<BurnRateData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -27,7 +40,7 @@ export function useBurnRate(params?: UseBurnRateParams) {
       if (params?.fromDate) query.set('from_date', params.fromDate)
       if (params?.toDate) query.set('to_date', params.toDate)
       const qs = query.toString()
-      const result = await apiFetch<BurnRatePoint[]>(`/balance/burn-rate${qs ? `?${qs}` : ''}`)
+      const result = await apiFetch<BurnRateData>(`/balance/burn-rate${qs ? `?${qs}` : ''}`)
       setData(result)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load burn rate')

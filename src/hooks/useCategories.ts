@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '../lib/api'
 
 export interface CategoryExpense {
-  category: string
-  amount: number
+  category_name: string
+  display_name: string
+  total_amount: number
+  transaction_count: number
   percentage: number
 }
 

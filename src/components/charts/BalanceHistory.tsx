@@ -3,11 +3,7 @@ import {
 } from 'recharts'
 import { ChartTooltip } from './ChartTooltip'
 import { formatDate } from '../../utils/format'
-
-interface BalanceHistoryPoint {
-  date: string
-  balance: number
-}
+import type { BalanceHistoryPoint } from '../../hooks/useHistory'
 
 interface BalanceHistoryProps {
   data: BalanceHistoryPoint[]
@@ -17,6 +13,7 @@ export function BalanceHistoryChart({ data }: BalanceHistoryProps) {
   const chartData = data.map(d => ({
     ...d,
     dateLabel: formatDate(d.date),
+    balance: d.closing_balance,
   }))
 
   return (

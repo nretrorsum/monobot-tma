@@ -3,15 +3,10 @@ import {
 } from 'recharts'
 import { ChartTooltip } from './ChartTooltip'
 import { formatDate } from '../../utils/format'
-
-interface BurnRatePoint {
-  date: string
-  expenses: number
-  avg7d: number
-}
+import type { BurnRateDailyPoint } from '../../hooks/useBurnRate'
 
 interface BurnRateChartProps {
-  data: BurnRatePoint[]
+  data: BurnRateDailyPoint[]
 }
 
 export function BurnRateChart({ data }: BurnRateChartProps) {
@@ -55,7 +50,7 @@ export function BurnRateChart({ data }: BurnRateChartProps) {
               radius={[4, 4, 0, 0]} name="Витрати"
             />
             <Line
-              type="monotone" dataKey="avg7d" stroke="#7c5cfc" strokeWidth={2}
+              type="monotone" dataKey="moving_avg_7d" stroke="#7c5cfc" strokeWidth={2}
               strokeDasharray="6 3" dot={false} name="Середня 7д"
             />
           </ComposedChart>

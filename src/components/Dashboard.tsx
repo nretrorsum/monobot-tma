@@ -20,7 +20,7 @@ export function Dashboard() {
   const { data: incomeExpenses, isLoading: ieLoading } = useIncomeExpenses()
   const { data: balanceData, isLoading: balanceLoading } = useBalance()
 
-  const todaySpent = incomeExpenses?.expenses ?? 0
+  const todaySpent = incomeExpenses?.total_expenses ?? 0
   const dailySavings = DAILY_LIMIT > 0 ? (MONTHLY_INCOME / 30) - DAILY_LIMIT : 0
 
   return (
@@ -44,13 +44,13 @@ export function Dashboard() {
           <div className="p-4 rounded-2xl bg-card-bg">
             <div className="text-xs mb-1 text-muted">Доходи за місяць</div>
             <div className="text-lg font-bold text-green">
-              {formatMoneyShort(incomeExpenses?.income ?? 0)}
+              {formatMoneyShort(incomeExpenses?.total_income ?? 0)}
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-card-bg">
             <div className="text-xs mb-1 text-muted">Витрати за місяць</div>
             <div className="text-lg font-bold text-red">
-              {formatMoneyShort(incomeExpenses?.expenses ?? 0)}
+              {formatMoneyShort(incomeExpenses?.total_expenses ?? 0)}
             </div>
           </div>
         </div>
