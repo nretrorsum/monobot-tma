@@ -2,19 +2,21 @@ import { init, retrieveRawInitData } from '@telegram-apps/sdk-react'
 
 export function initTelegramApp() {
   try {
+    console.log('[TMA] Initializing SDK...')
     init()
-  } catch {
-    if (import.meta.env.DEV) {
-      console.warn('[TMA] SDK init failed — running outside Telegram (dev mode)')
-    }
+    console.log('[TMA] SDK initialized successfully')
+  } catch (e) {
+    console.error('[TMA] SDK init failed:', e)
   }
 }
 
 export function getInitData(): string | null {
   try {
     const raw = retrieveRawInitData()
+    console.log('[TMA] initDataRaw:', raw ? `${raw.slice(0, 80)}...` : 'null')
     return raw ?? null
-  } catch {
+  } catch (e) {
+    console.error('[TMA] Failed to retrieve initData:', e)
     return null
   }
 }
