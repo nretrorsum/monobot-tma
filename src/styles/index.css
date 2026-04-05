@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-page-bg: #16161a;
+  --color-card-bg: #1c1c22;
+  --color-muted: #6a6a7c;
+  --color-muted-light: #8a8a9c;
+  --color-text: #ececf0;
+  --color-purple: #7c5cfc;
+  --color-green: #3d9a6e;
+  --color-red: #c45252;
+  --color-orange: #c4934a;
+  --color-light-purple: #8b6cc4;
+  --color-teal: #5a8fa8;
+  --color-dark-purple: #9b5ca8;
+  --color-mint: #4a9e90;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-page-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Fade-in animation for content sections */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.3s ease-out both;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
