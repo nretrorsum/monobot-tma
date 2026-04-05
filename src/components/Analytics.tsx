@@ -9,7 +9,6 @@ import { CategoryDonut } from './charts/CategoryDonut'
 import { BalanceHistoryChart } from './charts/BalanceHistory'
 import { BurnRateChart } from './charts/BurnRateChart'
 import { formatMoney, getCurrencySymbol } from '../utils/format'
-import { getAccessToken } from '../lib/api'
 
 type Period = 'month' | 'prev' | '90d'
 
@@ -34,38 +33,6 @@ function getPeriodDates(period: Period): { fromDate: string; toDate: string } {
   }
 }
 
-// Mock data for dev mode
-const mockAccounts = [
-  { account_id: '8osPkXNM', display_name: '8osPkXNM', balance: 0, currency_code: 840, last_transaction_time: null },
-  { account_id: 'gQAi6jmF', display_name: 'gQAi6jmF', balance: 0, currency_code: 978, last_transaction_time: null },
-  { account_id: 'jasBTCYA', display_name: 'jasBTCYA', balance: 2761934, currency_code: 980, last_transaction_time: null },
-]
-
-const mockIncomeExpenses = { income: 2541269, expenses: 567782, savings: 1973487, savings_rate: 77.66, avg_per_day: 567782 }
-
-const mockCategories = [
-  { category: 'Туристичні агентства', amount: 198500, percentage: 35 },
-  { category: 'Ресторани', amount: 132400, percentage: 23 },
-  { category: 'Грошові перекази', amount: 105600, percentage: 19 },
-  { category: 'Таксі', amount: 67200, percentage: 12 },
-  { category: 'Продукти / Супермаркети', amount: 42500, percentage: 7 },
-  { category: 'Громадський транспорт', amount: 21582, percentage: 4 },
-]
-
-const mockHistory = [
-  { date: '2026-04-01', balance: 2750000 },
-  { date: '2026-04-02', balance: 2735000 },
-  { date: '2026-04-03', balance: 2761934 },
-  { date: '2026-04-04', balance: 2761934 },
-]
-
-const mockBurnRate = [
-  { date: '2026-04-01', expenses: 489200, avg7d: 320000 },
-  { date: '2026-04-02', expenses: 78582, avg7d: 295000 },
-  { date: '2026-04-03', expenses: 0, avg7d: 280000 },
-  { date: '2026-04-04', expenses: 0, avg7d: 265000 },
-]
-
 const periods: { id: Period; label: string }[] = [
   { id: 'month', label: 'Цей місяць' },
   { id: 'prev', label: 'Минулий' },
@@ -76,7 +43,6 @@ export function Analytics() {
   const [period, setPeriod] = useState<Period>('month')
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
 
-  const hasToken = !!getAccessToken()
   const { fromDate, toDate } = useMemo(() => getPeriodDates(period), [period])
 
   const hookParams = useMemo(() => ({
@@ -85,17 +51,13 @@ export function Analytics() {
     toDate,
   }), [selectedAccount, fromDate, toDate])
 
-  const { data: balanceData } = useBalance()
-  const { data: incomeExpenses } = useIncomeExpenses(hookParams)
-  const { data: categories } = useCategories(hookParams)
-  const { data: history } = useHistory(hookParams)
-  const { data: burnRate } = useBurnRate(hookParams)
+  const { data: balanceData, isLoading: balanceLoading } = useBalance()
+  const { data: incomeExpenses, isLoading: ieLoading } = useIncomeExpenses(hookParams)
+  const { data: categories, isLoading: catLoading } = useCategories(hookParams)
+  const { data: history, isLoading: histLoading } = useHistory(hookParams)
+  const { data: burnRate, isLoading: burnLoading } = useBurnRate(hookParams)
 
-  const accounts = hasToken && balanceData ? balanceData.accounts : mockAccounts
-  const ie = hasToken && incomeExpenses ? incomeExpenses : mockIncomeExpenses
-  const cats = hasToken && categories?.length ? categories : mockCategories
-  const hist = hasToken && history?.length ? history : mockHistory
-  const burn = hasToken && burnRate?.length ? burnRate : mockBurnRate
+  const accounts = balanceData?.accounts ?? []
 
   return (
     <div className="flex flex-col gap-4">
@@ -117,70 +79,100 @@ export function Analytics() {
       </div>
 
       {/* Account cards */}
-      <div className="flex gap-3 overflow-x-auto pb-1">
-        <button
-          onClick={() => setSelectedAccount('all')}
-          className="min-w-[120px] p-3 rounded-2xl text-left shrink-0 transition-all"
-          style={{
-            backgroundColor: '#1c1c22',
-            border: selectedAccount === 'all' ? '1px solid #6366f1' : '1px solid transparent',
-          }}
-        >
-          <div className="text-xs mb-1 text-muted">Всі рахунки</div>
-          <div className="text-sm font-bold text-green">
-            {formatMoney(accounts.reduce((s, a) => a.currency_code === 980 ? s + a.balance : s, 0))}
-          </div>
-        </button>
-        {accounts.map(acc => (
+      {balanceLoading ? (
+        <div className="h-20 rounded-2xl bg-card-bg animate-pulse" />
+      ) : (
+        <div className="flex gap-3 overflow-x-auto pb-1">
           <button
-            key={acc.account_id}
-            onClick={() => setSelectedAccount(acc.account_id)}
+            onClick={() => setSelectedAccount('all')}
             className="min-w-[120px] p-3 rounded-2xl text-left shrink-0 transition-all"
             style={{
               backgroundColor: '#1c1c22',
-              border: selectedAccount === acc.account_id ? '1px solid #6366f1' : '1px solid transparent',
+              border: selectedAccount === 'all' ? '1px solid #6366f1' : '1px solid transparent',
             }}
           >
-            <div className="text-xs mb-1 text-muted">{acc.display_name}</div>
-            <div className="text-sm font-bold" style={{ color: acc.balance >= 0 ? '#3d9a6e' : '#c45252' }}>
-              {formatMoney(acc.balance, acc.currency_code)}
+            <div className="text-xs mb-1 text-muted">Всі рахунки</div>
+            <div className="text-sm font-bold text-green">
+              {formatMoney(accounts.reduce((s, a) => a.currency_code === 980 ? s + a.balance : s, 0))}
             </div>
-            <div className="text-xs text-muted">{getCurrencySymbol(acc.currency_code)}</div>
           </button>
-        ))}
-      </div>
+          {accounts.map(acc => (
+            <button
+              key={acc.account_id}
+              onClick={() => setSelectedAccount(acc.account_id)}
+              className="min-w-[120px] p-3 rounded-2xl text-left shrink-0 transition-all"
+              style={{
+                backgroundColor: '#1c1c22',
+                border: selectedAccount === acc.account_id ? '1px solid #6366f1' : '1px solid transparent',
+              }}
+            >
+              <div className="text-xs mb-1 text-muted">{acc.display_name}</div>
+              <div className="text-sm font-bold" style={{ color: acc.balance >= 0 ? '#3d9a6e' : '#c45252' }}>
+                {formatMoney(acc.balance, acc.currency_code)}
+              </div>
+              <div className="text-xs text-muted">{getCurrencySymbol(acc.currency_code)}</div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Summary stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-4 rounded-2xl bg-card-bg">
-          <div className="text-xs mb-1 text-muted">Доходи</div>
-          <div className="text-lg font-bold text-green">{formatMoney(ie.income)}</div>
+      {ieLoading ? (
+        <div className="grid grid-cols-2 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 rounded-2xl bg-card-bg animate-pulse" />
+          ))}
         </div>
-        <div className="p-4 rounded-2xl bg-card-bg">
-          <div className="text-xs mb-1 text-muted">Витрати</div>
-          <div className="text-lg font-bold text-red">{formatMoney(ie.expenses)}</div>
+      ) : incomeExpenses ? (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-4 rounded-2xl bg-card-bg">
+            <div className="text-xs mb-1 text-muted">Доходи</div>
+            <div className="text-lg font-bold text-green">{formatMoney(incomeExpenses.income)}</div>
+          </div>
+          <div className="p-4 rounded-2xl bg-card-bg">
+            <div className="text-xs mb-1 text-muted">Витрати</div>
+            <div className="text-lg font-bold text-red">{formatMoney(incomeExpenses.expenses)}</div>
+          </div>
+          <div className="p-4 rounded-2xl bg-card-bg">
+            <div className="text-xs mb-1 text-muted">Заощадження</div>
+            <div className="text-lg font-bold text-light-purple">{formatMoney(incomeExpenses.savings)}</div>
+            <div className="text-xs text-muted">{incomeExpenses.savings_rate.toFixed(1)}% від доходу</div>
+          </div>
+          <div className="p-4 rounded-2xl bg-card-bg">
+            <div className="text-xs mb-1 text-muted">Середня/день</div>
+            <div className="text-lg font-bold text-purple">{formatMoney(incomeExpenses.avg_per_day)}</div>
+          </div>
         </div>
-        <div className="p-4 rounded-2xl bg-card-bg">
-          <div className="text-xs mb-1 text-muted">Заощадження</div>
-          <div className="text-lg font-bold text-light-purple">{formatMoney(ie.savings)}</div>
-          <div className="text-xs text-muted">{ie.savings_rate.toFixed(1)}% від доходу</div>
-        </div>
-        <div className="p-4 rounded-2xl bg-card-bg">
-          <div className="text-xs mb-1 text-muted">Середня/день</div>
-          <div className="text-lg font-bold text-purple">{formatMoney(ie.avg_per_day)}</div>
-        </div>
-      </div>
+      ) : (
+        <p className="text-muted text-sm text-center py-4">Немає даних за обраний період</p>
+      )}
 
       {/* Charts */}
-      <IncomeExpensesChart income={ie.income} expenses={ie.expenses} savings={ie.savings} />
+      {incomeExpenses && (
+        <IncomeExpensesChart
+          income={incomeExpenses.income}
+          expenses={incomeExpenses.expenses}
+          savings={incomeExpenses.savings}
+        />
+      )}
 
-      <CategoryDonut
-        data={cats.map(c => ({ name: c.category, value: c.amount }))}
-      />
+      {catLoading ? (
+        <div className="h-60 rounded-2xl bg-card-bg animate-pulse" />
+      ) : categories.length > 0 ? (
+        <CategoryDonut data={categories.map(c => ({ name: c.category, value: c.amount }))} />
+      ) : null}
 
-      <BalanceHistoryChart data={hist} />
+      {histLoading ? (
+        <div className="h-60 rounded-2xl bg-card-bg animate-pulse" />
+      ) : history.length > 0 ? (
+        <BalanceHistoryChart data={history} />
+      ) : null}
 
-      <BurnRateChart data={burn} />
+      {burnLoading ? (
+        <div className="h-60 rounded-2xl bg-card-bg animate-pulse" />
+      ) : burnRate.length > 0 ? (
+        <BurnRateChart data={burnRate} />
+      ) : null}
     </div>
   )
 }

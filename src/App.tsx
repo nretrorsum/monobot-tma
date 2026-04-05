@@ -18,11 +18,7 @@ export default function App() {
         <h1 className="text-xl font-bold text-white mb-2">
           Mono<span className="text-purple">bot</span>
         </h1>
-        <p className="text-red text-sm mb-4">{error}</p>
-        <div className="text-xs text-muted-light bg-card-bg rounded-xl p-4 max-w-sm text-left break-all">
-          <div>API: {import.meta.env.VITE_API_URL || '(not set)'}</div>
-          <div className="mt-1">Mode: {import.meta.env.DEV ? 'dev' : 'prod'}</div>
-        </div>
+        <p className="text-red text-sm">{error}</p>
       </div>
     )
   }
