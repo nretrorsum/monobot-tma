@@ -10,9 +10,9 @@ import { BalanceHistoryChart } from './charts/BalanceHistory'
 import { BurnRateChart } from './charts/BurnRateChart'
 import { formatMoney, getCurrencySymbol } from '../utils/format'
 
-type Period = 'month' | 'prev' | '90d'
+type Period = 'month' | 'prev' | '90d' | 'custom'
 
-function getPeriodDates(period: Period): { fromDate: string; toDate: string } {
+function getPeriodDates(period: Exclude<Period, 'custom'>): { fromDate: string; toDate: string } {
   const now = new Date()
   const toDate = now.toISOString().split('T')[0]
 
@@ -37,13 +37,26 @@ const periods: { id: Period; label: string }[] = [
   { id: 'month', label: 'Цей місяць' },
   { id: 'prev', label: 'Минулий' },
   { id: '90d', label: '90 днів' },
+  { id: 'custom', label: 'Свій період' },
 ]
 
 export function Analytics() {
   const [period, setPeriod] = useState<Period>('month')
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
 
-  const { fromDate, toDate } = useMemo(() => getPeriodDates(period), [period])
+  const now = new Date()
+  const todayStr = now.toISOString().split('T')[0]
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  const [customFrom, setCustomFrom] = useState(thirtyDaysAgo)
+  const [customTo, setCustomTo] = useState(todayStr)
+
+  const { fromDate, toDate } = useMemo(() => {
+    if (period === 'custom') {
+      return { fromDate: customFrom, toDate: customTo }
+    }
+    return getPeriodDates(period)
+  }, [period, customFrom, customTo])
 
   const hookParams = useMemo(() => ({
     accountId: selectedAccount === 'all' ? undefined : selectedAccount,
@@ -77,6 +90,28 @@ export function Analytics() {
           </button>
         ))}
       </div>
+
+      {/* Custom date range */}
+      {period === 'custom' && (
+        <div className="flex gap-2 items-center">
+          <input
+            type="date"
+            value={customFrom}
+            max={customTo}
+            onChange={e => setCustomFrom(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-lg text-xs bg-card-bg text-white border border-transparent focus:border-purple outline-none"
+          />
+          <span className="text-xs text-muted">—</span>
+          <input
+            type="date"
+            value={customTo}
+            min={customFrom}
+            max={todayStr}
+            onChange={e => setCustomTo(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-lg text-xs bg-card-bg text-white border border-transparent focus:border-purple outline-none"
+          />
+        </div>
+      )}
 
       {/* Account cards */}
       {balanceLoading ? (
